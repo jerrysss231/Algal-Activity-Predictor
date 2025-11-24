@@ -1,32 +1,45 @@
-# PFAS Growth Activity Predictor - Standalone Executable
+# PFAS Growth Activity Prediction Tool
 
 ## Overview
-This repository contains the standalone executable (`.exe`) for the PFAS Growth Activity Prediction model. This application allows users to predict algae growth activity based on chemical structure (SMILES) and environmental conditions without installing Python or any dependencies.
+This project is a Flask-based Web application utilizing machine learning models (XGBoost) and chemical fingerprinting to predict the growth activity inhibition of algae exposed to PFAS. The application features a user-friendly interface that allows researchers to input chemical structures (SMILES) and key environmental parameters (e.g., temperature, light intensity, concentration) to generate real-time predictions validated by a Strict Applicability Domain assessment.
 
-## How to Use (Quick Start)
+## Prerequisites
+*   **Python 3.9** or higher installed.
+*   **pip** (Python package installer).
 
-**No Python environment setup is required.** Please follow the steps below:
+## Installation
 
-1.  **Download**: Navigate to the `dist` (or `Release`) folder in this repository and download the file named **`PFAS_Predictor.exe`**.
-2.  **Run**: Double-click the downloaded `.exe` file on a Windows machine.
-    *   *Note: Please allow a few seconds for the application to initialize. A command prompt window (black window) will appear; this is the background server.*
-3.  **Access**: The application will automatically open your default web browser and navigate to the prediction interface (`http://127.0.0.1:5000`).
-4.  **Predict**: Enter the required parameters (SMILES, Temperature, Light, etc.) and click "Predict Activity".
+1.  **Unzip** the archive to a local directory.
+2.  Open a terminal (Command Prompt or PowerShell) and navigate to the project directory.
+3.  Install the required dependencies using the following command:
 
-**Important Notes:**
-*   **Do not close the command prompt window** while using the web interface. Closing it will shut down the server.
-*   Since this software is a self-packaged academic tool (using PyInstaller) and not digitally signed, Windows Defender or antivirus software might display a warning. You can safely choose "Run anyway" to proceed.
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## Example Test Data
-To test the functionality, you may use the following values:
+    *Note: If you encounter issues installing RDKit via pip, you may use Conda: `conda install -c conda-forge rdkit`.*
 
-*   **SMILES**: `C(F)(F)(F)C(F)(F)C(=O)O` (Perfluorobutanoic acid)
+## How to Run
+
+1.  In the terminal, ensure you are in the project root directory (where `app.py` is located).
+2.  Run the application with the command:
+
+    ```bash
+    python app.py
+    ```
+
+3.  Once the server starts, you will see a message indicating the server is running (usually `Running on http://127.0.0.1:5000`).
+4.  Open your web browser and visit: **http://127.0.0.1:5000**
+
+## Test Data
+To verify the functionality, you may use the following sample inputs:
+*   **SMILES**: `C(F)(F)(F)C(F)(F)C(=O)O`
 *   **Temperature**: `25`
 *   **Light intensity**: `4000`
 *   **Exposure time**: `4`
 *   **Concentration**: `100`
-*   **Species**: *Select any from the dropdown*
-*   **Habitat**: *Select any from the dropdown*
+*   **Species**: *Select any option*
+*   **Habitat**: *Select any option*
 
 ---
-For any issues regarding the execution, please contact the corresponding author.
+**Note:** Please keep the terminal window open while using the web interface.
