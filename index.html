@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 修改点 1：网页标题 -->
+    <title>PFAS Growth Activity Prediction</title>
+    <!-- Google Fonts & Bootstrap -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root { --google-blue: #1a73e8; --google-red: #d93025; --google-green: #188038; --text-color: #202124; --bg-color: #f0f2f5; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .main-card { background: white; width: 100%; max-width: 650px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); padding: 40px; position: relative; }
+        .main-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 10px; background-color: var(--google-blue); }
+        h1 { font-size: 24px; margin-bottom: 10px; }
+        .form-floating > .form-control, .form-floating > .form-select { border: 1px solid #dadce0; border-radius: 4px; height: 56px; }
+        .form-floating > .form-control:focus, .form-floating > .form-select:focus { border-color: var(--google-blue); box-shadow: inset 0 0 0 1px var(--google-blue); }
+        .form-control.is-invalid { border-color: var(--google-red); }
+        .error-text { color: var(--google-red); font-size: 12px; margin-top: 4px; margin-left: 14px; display: none; }
+        .btn-google { background-color: var(--google-blue); color: white; padding: 10px 24px; border-radius: 4px; border: none; float: right; }
+        .btn-google:hover { background-color: #1557b0; }
+        .btn-google:disabled { background-color: #dadce0; }
+        #result-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dadce0; display: none; }
+        .result-badge { padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; background-color: #f1f3f4; }
+        .badge-pass { background-color: #e6f4ea; color: var(--google-green); }
+        .badge-fail { background-color: #fce8e6; color: var(--google-red); }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <!-- 修改点 2：主标题 -->
+    <h1>PFAS Growth Activity Prediction</h1>
+    <!-- 修改点 3：描述文本，去掉了 inhibition -->
+    <p class="text-muted small mb-4">Predict algae growth activity based on chemical structure and environmental conditions.</p>
+
+    <form id="pfasForm">
+        <!-- SMILES -->
+        <div class="mb-4">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="smiles" placeholder="SMILES" required>
+                <label for="smiles">SMILES (Chemical Structure)</label>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Temperature -->
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="temperature" placeholder="Temp" min="20" max="30" step="any" required>
+                    <label for="temperature">Temperature (°C)</label>
+                </div>
+                <div class="error-text" id="err-temperature">Range: 20 - 30 °C</div>
+            </div>
+
+            <!-- Light -->
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="light" placeholder="Light" min="1500" max="8000" step="any" required>
+                    <label for="light">Light intensity (lux)</label>
+                </div>
+                <div class="error-text" id="err-light">Range: 1500 - 8000 lux</div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Time -->
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="time" placeholder="Time" min="1" max="21" step="any" required>
+                    <label for="time">Exposure time (d)</label>
+                </div>
+                <div class="error-text" id="err-time">Range: 1 - 21 days</div>
+            </div>
+
+            <!-- Conc -->
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="conc" placeholder="Conc" min="0.01" max="4032530.4" step="any" required>
+                    <label for="conc">Concentration (μg/L)</label>
+                </div>
+                <div class="error-text" id="err-conc">Range: 0.01 - 4,032,530.4</div>
+            </div>
+        </div>
+
+        <!-- Species -->
+        <div class="mb-3">
+            <div class="form-floating">
+                <select class="form-select" id="species" required>
+                    <option value="" selected disabled>Choose species</option>
+                    <option value="Anabaena CPB4337">Anabaena CPB4337</option>
+                    <option value="Chlamydomonas reinhardtii">Chlamydomonas reinhardtii</option>
+                    <option value="Chlorella pyrenoidosa">Chlorella pyrenoidosa</option>
+                    <option value="Chlorella sorokiniana">Chlorella sorokiniana</option>
+                    <option value="Chlorella sp.">Chlorella sp.</option>
+                    <option value="Chlorella vulgaris">Chlorella vulgaris</option>
+                    <option value="Dunaliella salina">Dunaliella salina</option>
+                    <option value="Geitlerinema amphibium">Geitlerinema amphibium</option>
+                    <option value="Microcystis aeruginosa">Microcystis aeruginosa</option>
+                    <option value="Nitzschia palea">Nitzschia palea</option>
+                    <option value="Phaeodactylum tricornutum">Phaeodactylum tricornutum</option>
+                    <option value="Pseudokirchneriella subcapitata">Pseudokirchneriella subcapitata</option>
+                    <option value="Raphidocelis subcapitata">Raphidocelis subcapitata</option>
+                    <option value="Scenedesmus obliquus">Scenedesmus obliquus</option>
+                    <option value="Selenastrum capricornutum">Selenastrum capricornutum</option>
+                    <option value="Skeletonema marinoi">Skeletonema marinoi</option>
+                    <option value="Synechocystis sp. PCC(Synechocystis hereafter)">Synechocystis sp. PCC</option>
+                </select>
+                <label for="species">Species</label>
+            </div>
+        </div>
+
+        <!-- Habitat -->
+        <div class="mb-4">
+            <div class="form-floating">
+                <select class="form-select" id="habitat" required>
+                    <option value="" selected disabled>Choose habitat</option>
+                    <option value="freshwater">Freshwater</option>
+                    <option value="Marine">Marine</option>
+                    <option value="freshwatermarinebrackish">Freshwater/Marine/Brackish</option>
+                </select>
+                <label for="habitat">Habitat</label>
+            </div>
+        </div>
+
+        <div class="clearfix">
+            <button type="button" class="btn-google" onclick="handlePredict()">Predict Activity</button>
+        </div>
+    </form>
+
+    <!-- Results -->
+    <div id="result-section">
+        <h5 style="color: var(--text-color);">Prediction Result</h5>
+        <div class="d-flex align-items-center mb-2">
+            <span class="text-muted me-2">AD Status:</span>
+            <span id="ad-badge" class="result-badge">Checking...</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+             <span class="text-muted me-2">Similarity:</span>
+             <strong id="sim-val">-</strong>
+        </div>
+        <div class="p-3 bg-light rounded-3">
+            <!-- 修改点 4：结果标签 -->
+            <span class="d-block text-muted small">Predicted Growth Activity</span>
+            <span id="pred-value" style="font-size: 24px; color: var(--google-blue);">Waiting...</span>
+        </div>
+        <div id="error-message-box" class="alert alert-danger mt-3" style="display:none; font-size: 14px;"></div>
+    </div>
+</div>
+
+<script>
+    // 1. 配置
+    const CONSTRAINTS = {
+        temp: { min: 20, max: 30 },
+        light: { min: 1500, max: 8000 },
+        time: { min: 1, max: 21 },
+        conc: { min: 0.01, max: 4032530.4 }
+    };
+
+    // 2. 验证函数 (已增强防崩溃)
+    function validateInput(inputId, config) {
+        const input = document.getElementById(inputId);
+        const errorTextId = 'err-' + inputId; 
+        const errorText = document.getElementById(errorTextId);
+
+        if (!input) return false;
+        const val = parseFloat(input.value);
+        
+        input.classList.remove('is-invalid');
+        if (errorText) errorText.style.display = 'none';
+
+        if (isNaN(val) || val < config.min || val > config.max) {
+            input.classList.add('is-invalid');
+            if (errorText) errorText.style.display = 'block';
+            return false;
+        }
+        return true;
+    }
+
+    // 3. 绑定事件
+    window.onload = function() {
+        document.getElementById('temperature').addEventListener('input', () => validateInput('temperature', CONSTRAINTS.temp));
+        document.getElementById('light').addEventListener('input', () => validateInput('light', CONSTRAINTS.light));
+        document.getElementById('time').addEventListener('input', () => validateInput('time', CONSTRAINTS.time));
+        document.getElementById('conc').addEventListener('input', () => validateInput('conc', CONSTRAINTS.conc));
+    };
+
+    // 4. 点击按钮
+    function handlePredict() {
+        let isValid = true;
+        isValid &= validateInput('temperature', CONSTRAINTS.temp);
+        isValid &= validateInput('light', CONSTRAINTS.light);
+        isValid &= validateInput('time', CONSTRAINTS.time);
+        isValid &= validateInput('conc', CONSTRAINTS.conc);
+
+        const smiles = document.getElementById('smiles').value.trim();
+        const species = document.getElementById('species').value;
+        const habitat = document.getElementById('habitat').value;
+
+        if (!smiles || !species || !habitat) {
+            alert("Please fill in all fields (SMILES, Species, Habitat).");
+            return;
+        }
+
+        if (!isValid) {
+            alert("Values out of range. Please check the red fields.");
+            return;
+        }
+
+        const resultSection = document.getElementById('result-section');
+        const adBadge = document.getElementById('ad-badge');
+        const predVal = document.getElementById('pred-value');
+        const errBox = document.getElementById('error-message-box');
+        const btn = document.querySelector('.btn-google');
+
+        resultSection.style.display = 'block';
+        predVal.innerText = "Calculating...";
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+        errBox.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('smiles', smiles);
+        formData.append('temperature', document.getElementById('temperature').value);
+        formData.append('light', document.getElementById('light').value);
+        formData.append('time', document.getElementById('time').value);
+        formData.append('concentration', document.getElementById('conc').value);
+        formData.append('species', species);
+        formData.append('habitat', habitat);
+
+        fetch('/predict', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) return response.json().then(err => { throw new Error(err.error || 'Server Error'); });
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('sim-val').innerText = parseFloat(data.similarity).toFixed(3);
+            predVal.innerText = parseFloat(data.prediction).toFixed(2) + " %";
+
+            if (data.ad_status === 'Pass') {
+                adBadge.className = 'result-badge badge-pass';
+                adBadge.innerText = 'Pass';
+                predVal.style.color = "var(--google-blue)";
+            } else {
+                adBadge.className = 'result-badge badge-fail';
+                adBadge.innerText = 'Out of Domain';
+                predVal.style.color = "var(--google-red)";
+                errBox.style.display = 'block';
+                errBox.innerText = `Warning: ${data.ad_message}`;
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Error: " + error.message);
+            predVal.innerText = "Error";
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerText = "Predict Activity";
+        });
+    }
+</script>
+
+</body>
+</html>
